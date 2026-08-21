@@ -1,0 +1,90 @@
+﻿version: '3.9'
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: jaldrishti-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jaldrishti}
+      POSTGRES_USER: ${POSTGRES_USER:-jaldrishti_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U jaldrishti_user -d jaldrishti']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ───────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: jaldrishti-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ─────────────────────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: jaldrishti-server
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./server:/app
+      - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # ── Celery Worker ───────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: jaldrishti-worker
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./server:/app
+      - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.workers.celery_app worker --loglevel=info
+
+  # ── React Frontend ─────────────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: jaldrishti-client
+    restart: unless-stopped
+    ports:
+      - '5173:5173'
+    volumes:
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+    depends_on:
+      - server
+
+volumes:
+  pgdata:
