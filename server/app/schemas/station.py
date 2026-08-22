@@ -1,4 +1,4 @@
-﻿"""Pydantic schemas for Station API responses."""
+"""Pydantic schemas for Station API responses."""
 
 from datetime import datetime
 from typing import Optional, List
@@ -115,3 +115,14 @@ class AdvisoryResponse(BaseModel):
     recommendation: str = Field(description="Actionable recommendation for stakeholders")
     urgency: str = Field(default="moderate", description="'low' | 'moderate' | 'high' | 'critical'")
     generated_at: datetime
+
+
+# -- Pagination ----------------------------------------------------------------
+
+class PaginatedStations(BaseModel):
+    """Paginated list of station summaries."""
+    items: List[StationSummary] = []
+    total: int = Field(description="Total number of matching stations")
+    page: int = Field(description="Current page number (1-indexed)")
+    page_size: int = Field(description="Number of items per page")
+    total_pages: int = Field(description="Total number of pages")

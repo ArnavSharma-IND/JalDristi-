@@ -1,5 +1,5 @@
 ﻿"""
-Station model — represents a DWLR monitoring station.
+Station model - represents a DWLR monitoring station.
 """
 
 import uuid
@@ -30,6 +30,16 @@ class Station(Base, TimestampMixin):
     # Aquifer info
     aquifer_type = Column(String(100), nullable=True)
     well_depth_m = Column(Float, nullable=True)
+
+    # Stage of Groundwater Development (%)
+    # = (Annual GW Extraction / Net Annual GW Recharge) x 100
+    # When available, this is the official CGWB metric and takes precedence
+    # over depth-based proxy classification.
+    stage_of_development = Column(Float, nullable=True)
+
+    # Classification method used
+    # 'stage' = official CGWB metric, 'depth_proxy' = depth-based proxy
+    classification_method = Column(String(20), nullable=True)
 
     # Current classification
     current_risk_category = Column(

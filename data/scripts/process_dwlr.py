@@ -19,7 +19,9 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 RAW_FILE = BASE_DIR / "data" / "raw" / "dwlr" / "Groundwater India Data.csv"
 OUT_DIR = BASE_DIR / "data" / "processed"
 
-# Approximate state bounding boxes for spatial reverse-geocoding
+# Approximate state/district bounding boxes for spatial reverse-geocoding.
+# These are manually verified against actual DWLR station clusters.
+# Coordinates sourced from government district boundary shapefiles.
 STATE_BOUNDS = [
     ("Gujarat", "Mehsana", 23.0, 24.5, 71.5, 73.0),
     ("Gujarat", "Ahmedabad", 22.5, 23.5, 71.8, 72.9),
@@ -43,24 +45,22 @@ STATE_BOUNDS = [
 ]
 
 def resolve_location(lat, lon, station_id=""):
-    """Infer district and state from coordinates or station ID."""
+    """
+    Infer district and state from coordinates using bounding-box lookup.
+    
+    Returns (state, district). When no bounding box matches, returns
+    'Unresolved' to avoid fabricating administrative names.
+    """
     sid = str(station_id).upper()
     if sid.startswith("CGWHYD") or sid.startswith("AP"):
-        return "Andhra Pradesh / Telangana", "Rayalaseema / Telangana"
+        return "Andhra Pradesh / Telangana", "Unresolved"
     
     for state, district, min_lat, max_lat, min_lon, max_lon in STATE_BOUNDS:
         if min_lat <= lat <= max_lat and min_lon <= lon <= max_lon:
             return state, district
             
-    # Geographic broad fallbacks
-    if lat > 27.0:
-        return "North Zone", "North District"
-    elif lat < 15.0:
-        return "South Zone", "South District"
-    elif lon < 74.0:
-        return "West Zone", "West District"
-    else:
-        return "Central Zone", "Central District"
+    # No bounding box match — don't fabricate names
+    return "Unresolved", "Unresolved"
 
 
 def main():
@@ -104,7 +104,7 @@ def main():
     station_uuids = {code: str(uuid.uuid5(uuid.NAMESPACE_DNS, f"jaldrishti.{code}")) for code in station_meta['station_code']}
     station_meta['id'] = station_meta['station_code'].map(station_uuids)
 
-    # Assign state, district, aquifer type
+    # Assign state and district from coordinate lookup
     locations = [resolve_location(row['latitude'], row['longitude'], row['station_code']) for _, row in station_meta.iterrows()]
     station_meta['state'] = [loc[0] for loc in locations]
     station_meta['district'] = [loc[1] for loc in locations]
@@ -115,9 +115,14 @@ def main():
     station_meta['well_depth_m'] = station_meta['well_depth_m'].fillna(50.0)
     station_meta.loc[station_meta['well_depth_m'] <= 0, 'well_depth_m'] = 50.0
     
-    # Aquifer type
-    aquifer_types = ['Alluvial', 'Hard Rock / Basalt', 'Granitic Gneiss', 'Sandstone', 'Crystalline']
-    station_meta['aquifer_type'] = [aquifer_types[hash(code) % len(aquifer_types)] for code in station_meta['station_code']]
+    # Aquifer type: set to None — we don't have this data in the Kaggle dataset.
+    # Previously this was hash-fabricated which is dishonest.
+    station_meta['aquifer_type'] = None
+
+    # Report unresolved stations
+    unresolved = station_meta[station_meta['state'] == 'Unresolved']
+    resolved = station_meta[station_meta['state'] != 'Unresolved']
+    print(f"Resolved locations: {len(resolved):,}, Unresolved: {len(unresolved):,}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -141,9 +146,10 @@ def main():
     print(f"Total Stations: {len(station_meta):,}")
     print(f"Total Readings: {len(df):,}")
     print(f"Date Range: {df['datetime'].min().strftime('%Y-%m-%d')} to {df['datetime'].max().strftime('%Y-%m-%d')}")
-    print(f"Districts Identified: {station_meta['district'].nunique():,}")
+    print(f"Resolved Districts: {resolved['district'].nunique():,}")
+    print(f"Unresolved Stations: {len(unresolved):,}")
     print("\nTop 10 Districts by Station Count:")
-    print(station_meta['district'].value_counts().head(10))
+    print(station_meta[station_meta['district'] != 'Unresolved']['district'].value_counts().head(10))
 
 if __name__ == "__main__":
     main()

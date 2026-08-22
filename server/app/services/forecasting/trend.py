@@ -1,12 +1,12 @@
 ﻿"""
 Trend forecasting engine.
 
-Fits a linear (or optionally exponential) model to a station's water-level
-time series and projects forward to estimate when the station will cross
-into the next, more severe risk category.
+Fits a linear model to a station's water-level time series and projects
+forward to estimate when the station will cross into the next, more
+severe risk category.
 
 Design philosophy: a clear, defensible linear trend beats an unexplainable
-black-box model. This is a hackathon — the forecast must be explainable
+black-box model. This is a hackathon - the forecast must be explainable
 in 30 seconds to a judge.
 """
 
@@ -46,6 +46,36 @@ def _next_risk_tier(current: RiskCategory) -> Optional[RiskCategory]:
 def _threshold_for_tier(tier: RiskCategory) -> float:
     """Return the lower depth threshold (m) for a risk tier."""
     return DEPTH_THRESHOLDS_DEFAULT[tier][0]
+
+
+def _compute_confidence(
+    valid_readings: list,
+    r_squared: float,
+) -> str:
+    """
+    Compute trend confidence based on date-span coverage AND fit quality.
+    
+    Uses the actual time span covered by the data (not just row count),
+    because 24 readings crammed into 2 weeks is far less informative
+    than 12 readings spread across 18 months.
+    """
+    if len(valid_readings) < MIN_DATA_POINTS_FOR_TREND:
+        return "low"
+    
+    # Calculate date span in months
+    first_date = valid_readings[0].timestamp
+    last_date = valid_readings[-1].timestamp
+    span_days = (last_date - first_date).total_seconds() / 86400
+    span_months = span_days / 30.44
+    
+    # High confidence: 12+ months of data AND good fit
+    if span_months >= 12 and r_squared > 0.7 and len(valid_readings) >= 12:
+        return "high"
+    # Moderate confidence: 6+ months OR decent fit with enough points
+    elif span_months >= 6 and r_squared > 0.4 and len(valid_readings) >= 6:
+        return "moderate"
+    else:
+        return "low"
 
 
 def compute_forecast(
@@ -133,18 +163,13 @@ def compute_forecast(
             )
         )
 
-    # Confidence based on data quantity and R-squared
+    # Confidence based on date-span coverage AND R-squared
     y_pred = slope * x + intercept
     ss_res = np.sum((y - y_pred) ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
     r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0
 
-    if len(valid_readings) >= 24 and r_squared > 0.7:
-        confidence = "high"
-    elif len(valid_readings) >= 12 and r_squared > 0.4:
-        confidence = "moderate"
-    else:
-        confidence = "low"
+    confidence = _compute_confidence(valid_readings, r_squared)
 
     return StationForecast(
         station_id=station.id,

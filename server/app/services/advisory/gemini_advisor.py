@@ -1,5 +1,5 @@
 ﻿"""
-Advisory layer — Tier 2 LLM-generated explanations and recommendations.
+Advisory layer - Tier 2 LLM-generated explanations and recommendations.
 
 Uses Google Gemini to produce plain-language, station-specific advisories
 based on classification data, forecast trends, and recent readings.
@@ -23,18 +23,25 @@ groundwater monitoring stations. You produce clear, actionable advisories for
 government officials, district water managers, and gram panchayats.
 
 Your advisories must:
-1. Be specific to the station's actual numbers — never generic
+1. Be specific to the station's actual numbers - never generic
 2. Use plain language a district official can understand
 3. Include a clear urgency level
 4. Provide actionable recommendations (not just "monitor more")
 5. Reference the CGWB risk classification framework
-6. Be concise — one paragraph summary, one paragraph recommendation
+6. Be concise - one paragraph summary, one paragraph recommendation
 
 Do NOT:
 - Use technical jargon without explanation
 - Give vague advice like "take appropriate measures"
-- Hallucinate data — only reference the numbers provided
+- Hallucinate data - only reference the numbers provided
 """
+
+
+def _fmt_depth(depth_m: Optional[float]) -> str:
+    """Safely format depth value, returning 'N/A' for None."""
+    if depth_m is None:
+        return "N/A"
+    return f"{depth_m:.1f}"
 
 
 def _build_station_context(station: Station) -> str:
@@ -47,6 +54,14 @@ def _build_station_context(station: Station) -> str:
         for r in sorted_readings[:6]:
             recent_readings.append(f"  - {r.timestamp.strftime('%Y-%m-%d')}: {r.depth_below_ground_m:.2f}m bgl")
 
+    depth_str = _fmt_depth(station.current_depth_m)
+    classification_note = ""
+    if hasattr(station, 'classification_method') and station.classification_method:
+        if station.classification_method == "stage":
+            classification_note = f" (based on Stage of Development: {station.stage_of_development:.1f}%)"
+        else:
+            classification_note = " (based on depth proxy - Stage of Development data unavailable)"
+
     context = f"""
 STATION DATA:
 - Station Code: {station.station_code}
@@ -57,8 +72,8 @@ STATION DATA:
 - Well Depth: {station.well_depth_m or 'Not specified'}m
 
 CURRENT STATUS:
-- Latest Water Depth: {station.current_depth_m or 'N/A'}m below ground level
-- Risk Classification: {station.current_risk_category.value if station.current_risk_category else 'Unclassified'}
+- Latest Water Depth: {depth_str}m below ground level
+- Risk Classification: {station.current_risk_category.value if station.current_risk_category else 'Unclassified'}{classification_note}
   (CGWB categories: Safe < 8m, Semi-Critical 8-15m, Critical 15-25m, Over-Exploited > 25m)
 
 TREND ANALYSIS:
@@ -162,16 +177,29 @@ def _generate_template_advisory(
     station: Station, context: str, urgency: str
 ) -> AdvisoryResponse:
     """Fallback template-based advisory when LLM is unavailable."""
-    risk = station.current_risk_category
+    risk = station.current_risk_category or RiskCategory.SAFE
     depth = station.current_depth_m
+    depth_str = _fmt_depth(depth)
     
     forecast = compute_forecast(station)
     
-    if risk == RiskCategory.OVER_EXPLOITED:
+    if depth is None:
+        # Station has no depth data yet — can't generate a meaningful advisory
+        summary = (
+            f"Station {station.station_code} ({station.name}) in {station.district}, "
+            f"{station.state} has no water depth readings recorded yet. "
+            f"Classification and trend analysis are unavailable until telemetry data arrives."
+        )
+        recommendation = (
+            "Verify that the DWLR sensor is operational and transmitting data. "
+            "Check physical connectivity and ensure the station is included in the "
+            "next scheduled data collection cycle."
+        )
+    elif risk == RiskCategory.OVER_EXPLOITED:
         summary = (
             f"Station {station.station_code} ({station.name}) in {station.district}, "
             f"{station.state} is classified as Over-Exploited with a current water depth "
-            f"of {depth:.1f}m below ground level. The water table is {forecast.trend_direction} "
+            f"of {depth_str}m below ground level. The water table is {forecast.trend_direction} "
             f"at a rate of {abs(forecast.rate_of_change_m_per_year):.2f} meters per year. "
             f"Immediate intervention is required."
         )
@@ -184,7 +212,7 @@ def _generate_template_advisory(
     elif risk == RiskCategory.CRITICAL:
         summary = (
             f"Station {station.station_code} ({station.name}) in {station.district}, "
-            f"{station.state} is classified as Critical with a water depth of {depth:.1f}m bgl. "
+            f"{station.state} is classified as Critical with a water depth of {depth_str}m bgl. "
             f"The trend is {forecast.trend_direction} at {abs(forecast.rate_of_change_m_per_year):.2f}m/year."
         )
         if forecast.months_to_next_risk_tier:
@@ -200,7 +228,7 @@ def _generate_template_advisory(
     elif risk == RiskCategory.SEMI_CRITICAL:
         summary = (
             f"Station {station.station_code} ({station.name}) in {station.district}, "
-            f"{station.state} is Semi-Critical at {depth:.1f}m bgl. "
+            f"{station.state} is Semi-Critical at {depth_str}m bgl. "
             f"Trend: {forecast.trend_direction} ({abs(forecast.rate_of_change_m_per_year):.2f}m/year)."
         )
         recommendation = (
@@ -211,7 +239,7 @@ def _generate_template_advisory(
     else:
         summary = (
             f"Station {station.station_code} ({station.name}) in {station.district}, "
-            f"{station.state} is currently Safe at {depth:.1f}m bgl. "
+            f"{station.state} is currently Safe at {depth_str}m bgl. "
             f"Trend: {forecast.trend_direction}."
         )
         recommendation = (

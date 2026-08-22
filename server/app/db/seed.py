@@ -47,6 +47,11 @@ async def fast_seed():
     with open(stations_file, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            # Handle aquifer_type: treat empty strings as None
+            aquifer = row.get("aquifer_type")
+            if aquifer in (None, "", "None"):
+                aquifer = None
+            
             stations_data.append({
                 "id": UUID(row["id"]) if "id" in row and row["id"] else uuid4(),
                 "station_code": row["station_code"],
@@ -56,8 +61,10 @@ async def fast_seed():
                 "district": row["district"],
                 "state": row["state"],
                 "block": row.get("block", ""),
-                "aquifer_type": row.get("aquifer_type"),
+                "aquifer_type": aquifer,
                 "well_depth_m": float(row["well_depth_m"]) if row.get("well_depth_m") else None,
+                "stage_of_development": None,  # Not available in Kaggle dataset
+                "classification_method": None,
                 "current_risk_category": None,
                 "current_depth_m": None,
                 "created_at": datetime.now(timezone.utc),
@@ -117,6 +124,7 @@ async def fast_seed():
                 latest_depth = station_latest_reading[st.id][1]
                 st.current_depth_m = round(latest_depth, 2)
                 st.current_risk_category = classify_by_depth(latest_depth)
+                st.classification_method = "depth_proxy"
 
         await session.commit()
         print(f"[OK] {len(stations):,} stations classified according to CGWB norms.")
