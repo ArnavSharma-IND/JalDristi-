@@ -26,7 +26,7 @@
 
 India relies heavily on groundwater for ~85% of rural drinking water and ~60% of agricultural irrigation. While the **Central Ground Water Board (CGWB)** monitors groundwater across ~25,000 **Digital Water Level Recorders (DWLRs)** nationwide, raw sensor telemetry has historically remained locked in static annual reports without continuous automated surveillance or predictive trend alerts.
 
-**JalDrishti (जलदृष्टि)** closes this critical gap by providing an end-to-end continuous groundwater intelligence & decision-support system. It automatically ingests sensor telemetry, classifies station risks against statutory CGWB benchmarks, forecasts depletion trends using calibrated statistical models, and produces plain-language stakeholder advisories using **Google Gemini 2.0 LLM** with an automated deterministic fallback engine.
+**JalDrishti (जलदृष्टि)** closes this critical gap by providing an end-to-end continuous groundwater intelligence & decision-support system. It automatically ingests sensor telemetry, classifies station risks against statutory CGWB benchmarks, forecasts depletion trends using calibrated statistical models, and produces plain-language stakeholder advisories using **Google Gemini 3.5 LLM** with an automated deterministic fallback engine.
 
 ---
 
@@ -39,9 +39,9 @@ India relies heavily on groundwater for ~85% of rural drinking water and ~60% of
 - **📈 Calibrated Trend Forecasting**:
   - Linear regression & rate-of-change modeling to project 24-month depletion trajectories.
   - **Statistical Confidence Rating**: Calibrated by actual sensor date-span duration (12+ months vs. short-term) and R² regression fit.
-- **🤖 Transparent AI Advisory Engine (Google Gemini 2.0 Flash)**:
+- **🤖 Transparent AI Advisory Engine (Google Gemini 3.5 Flash)**:
   - Plain-language situation assessments and actionable policy recommendations.
-  - Transparent badges identifying **AI-Generated (Gemini 2.0)** vs. **Standard Advisory (Rule-Engine)** ensuring 100% uptime for local authorities.
+  - Transparent badges identifying **AI-Generated (Gemini 3.5)** vs. **Standard Advisory (Rule-Engine)** ensuring 100% uptime for local authorities.
 - **🚨 Live Critical Transition Alert Feed**:
   - Automated detection when telemetry crosses statutory risk boundaries.
   - Multi-stakeholder dispatch audit (District Collector, Block Development Officer, Gram Panchayat Water Committee).
@@ -65,7 +65,7 @@ graph TD
     D --> F["FastAPI Backend REST API<br/>(/api/v1/stations, /alerts, /provenance)"]
     E --> F
     
-    F --> G["Advisory Layer<br/>(Gemini 2.0 Flash + Rule Fallback)"]
+    F --> G["Advisory Layer<br/>(Gemini 3.5 Flash + Rule Fallback)"]
     
     F --> H["Web Dashboard<br/>(React 19 + Vite + Glassmorphism UI)"]
     F --> I["Mobile Companion<br/>(React Native + Expo Router)"]
@@ -80,7 +80,7 @@ graph TD
 | **Backend API** | Python 3.11+, FastAPI, SQLAlchemy, Pydantic v2, Uvicorn |
 | **Data & Pipeline** | Pandas, NumPy (polyfit linear modeling), Celery, Redis |
 | **Database** | PostgreSQL 16 / SQLite (async driver) |
-| **AI / GenAI** | Google Gemini 2.0 Flash (google-genai SDK) |
+| **AI / GenAI** | Google Gemini 3.5 Flash (google-genai SDK) |
 | **Web Frontend** | React 19, TypeScript, Vite, Recharts, Leaflet GIS, Glassmorphism UI |
 | **Mobile App** | React Native, Expo Router, TypeScript |
 | **Testing** | Pytest, AnyIO, Pytest-AsyncIO (23 unit tests) |
@@ -184,7 +184,7 @@ python -m pytest tests/ -v
 | GET | /api/v1/stations/{id} | Full station telemetry observations & specifications |
 | GET | /api/v1/stations/{id}/dual-classification | Side-by-side CGWB statutory stage vs. sensor depth proxy |
 | GET | /api/v1/stations/{id}/forecast | 24-month trend projection with date-span calibrated confidence |
-| GET | /api/v1/stations/{id}/advisory | Gemini 2.0 situation analysis & stakeholder recommendations |
+| GET | /api/v1/stations/{id}/advisory | Gemini 3.5 situation analysis & stakeholder recommendations |
 | GET | /api/v1/alerts | Live critical risk transition notification feed |
 | GET | /api/v1/districts | District-level aggregate risk summary |
 

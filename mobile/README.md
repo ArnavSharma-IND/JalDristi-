@@ -9,7 +9,7 @@ Companion mobile application for field officers, district collectors, and water 
 - **Real-Time Telemetry Feed**: Live monitoring of 6,400+ DWLR stations with CGWB risk badges (Safe, Semi-Critical, Critical, Over-Exploited).
 - **Dual-Mode CGWB Evaluation**: Side-by-side comparison of statutory block Stage of Development (%) vs high-frequency depth proxy.
 - **Active Alert & Dispatch Feed**: Immediate notifications when telemetry observations breach statutory risk boundaries.
-- **AI-Powered Stakeholder Advisories**: Plain-language situation summaries and recommended interventions powered by Google Gemini 2.0 Flash with deterministic rule-engine fallback.
+- **AI-Powered Stakeholder Advisories**: Plain-language situation summaries and recommended interventions powered by Google Gemini 3.5 Flash with deterministic rule-engine fallback.
 - **District Aggregates**: High-level drilldown into district groundwater categories.
 
 ---

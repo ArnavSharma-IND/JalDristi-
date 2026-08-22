@@ -237,7 +237,7 @@ export default function StationDetailPage() {
                     gap: '4px',
                   }}
                 >
-                  <Sparkles size={11} /> AI-Generated (Gemini 2.0)
+                  <Sparkles size={11} /> AI-Generated (Gemini 3.5)
                 </span>
               ) : (
                 <span
@@ -305,7 +305,7 @@ export default function StationDetailPage() {
           <div style={{ marginTop: 'auto', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
               {isGeminiAdvisory
-                ? 'Synthesized with Google Gemini 2.0 Flash'
+                ? 'Synthesized with Google Gemini 3.5 Flash'
                 : 'Deterministic Fallback: Built with CGWB Standard Mitigation Guidelines'}
             </span>
             <button

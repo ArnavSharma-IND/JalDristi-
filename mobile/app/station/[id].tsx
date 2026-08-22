@@ -173,7 +173,7 @@ export default function StationDetailScreen() {
             ]}
           >
             <Text style={[styles.sourceTagText, { color: isGemini ? '#38bdf8' : '#f59e0b' }]}>
-              {isGemini ? '✨ Gemini 2.0' : '🛡️ Standard Rules'}
+              {isGemini ? '✨ Gemini 3.5' : '🛡️ Standard Rules'}
             </Text>
           </View>
         </View>
