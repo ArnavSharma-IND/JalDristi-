@@ -1,4 +1,4 @@
-﻿"""
+"""
 JalDrishti — FastAPI Application Entry Point
 
 Real-time Groundwater Resource Evaluation using DWLR Data.
@@ -38,6 +38,7 @@ app = FastAPI(
     ),
     version="0.1.0",
     docs_url="/api/docs",
+    redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
@@ -50,6 +51,32 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Root & Utility Endpoints ──────────────────────────────────────────────────
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "service": "JalDrishti API",
+        "version": "0.1.0",
+        "status": "online",
+        "docs": "/api/docs",
+        "redoc": "/api/redoc",
+        "openapi": "/api/openapi.json",
+        "health": "/api/v1/health",
+    }
+
+
+@app.get("/docs", include_in_schema=False)
+async def redirect_docs():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/api/docs")
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redirect_redoc():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/api/redoc")
+
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
