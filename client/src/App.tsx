@@ -17,6 +17,37 @@ function App() {
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [simulationNotice, setSimulationNotice] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [livePing, setLivePing] = useState<{ station_id: string; water_level_m_bgl: number } | null>(null);
+
+  useEffect(() => {
+    // Establish Real-Time WebSocket Telemetry Stream
+    const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+    const wsUrl = rawBaseUrl.replace('http', 'ws').replace('/api/v1', '/ws/stream');
+    
+    let ws: WebSocket | null = null;
+    try {
+      ws = new WebSocket(wsUrl);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'LIVE_PING') {
+            setLivePing({ station_id: data.station_id, water_level_m_bgl: data.water_level_m_bgl });
+            setTimeout(() => setLivePing(null), 4500);
+          }
+        } catch {
+          // ignore non-json
+        }
+      };
+    } catch {
+      // ignore WS failure in offline mode
+    }
+
+    return () => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
@@ -86,7 +117,7 @@ function App() {
       {/* Top Navigation Bar */}
       <nav className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex flex-wrap justify-between items-center sticky top-0 z-40 shadow-md gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-cyan-600 flex items-center justify-center font-bold text-white shadow-[0_0_12px_rgba(8,145,178,0.6)]">
+          <div className="w-8 h-8 rounded bg-cyan-600 flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(8,145,178,0.6)] animate-pulse-ring">
             JD
           </div>
           <div>
@@ -96,6 +127,17 @@ function App() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Real-Time WebSocket Telemetry Ping Badge */}
+          {livePing && (
+            <div className="animate-fade-in flex items-center gap-2 text-xs bg-emerald-950/60 border border-emerald-700 text-emerald-300 px-3 py-1.5 rounded-full shadow-lg">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span><strong>{livePing.station_id}</strong> pinged: <span className="font-mono font-bold text-emerald-200">{livePing.water_level_m_bgl}m bgl</span></span>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <button
             onClick={handleSimulatePing}
@@ -109,7 +151,7 @@ function App() {
           <a
             href={apiService.getExportCsvUrl()}
             download
-            className="px-3 py-1.5 rounded-md bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-md bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
             title="Download CSV report of active stations"
           >
             📥 Export Report (CSV)
@@ -118,7 +160,7 @@ function App() {
           <div className="hidden md:flex gap-3 text-xs font-medium text-slate-400 pl-2 border-l border-slate-800">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              API Online
+              API & WS Live
             </span>
             <span className="bg-slate-800 px-2 py-0.5 rounded text-[11px] text-slate-400 border border-slate-700">SIH25068</span>
           </div>
