@@ -98,6 +98,3 @@ def process_telemetry_batch(db: Session, batch: List[Dict[str, Any]]) -> Dict[st
     
     db.commit()
     return stats
-
-
-__all__ = ["RawTelemetryPayload", "process_telemetry_batch"]

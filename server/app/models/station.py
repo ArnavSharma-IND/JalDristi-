@@ -6,10 +6,11 @@ Explicitly separates statutory CGWB benchmarks from live telemetry sensor risks.
 import enum
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Float, Integer, Enum as SAEnum, Boolean, DateTime, Uuid, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Float, Integer, Enum as SAEnum, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship, synonym
 
 from app.models.base import Base, TimestampMixin
+from app.models.reading import WaterLevelReading, TelemetryReading
 from app.core.constants import RiskCategory
 
 
@@ -24,8 +25,9 @@ class RiskLevel(str, enum.Enum):
 class Station(Base, TimestampMixin):
     __tablename__ = "stations"
 
-    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    station_code = Column(String(50), unique=True, nullable=False, index=True)
+    id = Column(String(100), primary_key=True, default=lambda: str(uuid.uuid4()))
+    station_id = Column(String(100), unique=True, nullable=True, index=True)
+    station_code = Column(String(100), nullable=True, index=True)
     name = Column(String(200), nullable=False)
 
     # Location
@@ -82,9 +84,16 @@ class Station(Base, TimestampMixin):
     # Relationships
     readings = relationship("WaterLevelReading", back_populates="station", cascade="all, delete-orphan")
 
-    @property
-    def station_id(self) -> str:
-        return self.station_code or str(self.id)
+    def __init__(self, **kwargs):
+        sid = kwargs.get("station_id") or kwargs.get("station_code") or kwargs.get("id")
+        if sid:
+            if "id" not in kwargs:
+                kwargs["id"] = str(sid)
+            if "station_id" not in kwargs:
+                kwargs["station_id"] = str(sid)
+            if "station_code" not in kwargs:
+                kwargs["station_code"] = str(sid)
+        super().__init__(**kwargs)
 
     def __repr__(self):
-        return f"<Station {self.station_code} | {self.name} | {self.current_risk_category}>"
+        return f"<Station {self.station_id or self.station_code or self.id} | {self.name} | {self.current_risk_category or self.telemetry_risk_indicator}>"
