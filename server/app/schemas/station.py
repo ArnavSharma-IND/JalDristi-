@@ -1,4 +1,4 @@
-"""Pydantic schemas for Station API responses."""
+﻿"""Pydantic schemas for Station API responses."""
 
 from datetime import datetime
 from typing import Optional, List
@@ -21,6 +21,8 @@ class StationBase(BaseModel):
     block: Optional[str] = None
     aquifer_type: Optional[str] = None
     well_depth_m: Optional[float] = None
+    stage_of_development: Optional[float] = None
+    classification_method: Optional[str] = None
 
 
 class StationSummary(BaseModel):
@@ -35,6 +37,8 @@ class StationSummary(BaseModel):
     current_risk_category: Optional[RiskCategory] = None
     current_depth_m: Optional[float] = None
     months_to_next_risk_tier: Optional[int] = None
+    stage_of_development: Optional[float] = None
+    classification_method: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -107,17 +111,76 @@ class DistrictSummary(BaseModel):
 # ── Advisory ──────────────────────────────────────────────────────────────────
 
 class AdvisoryResponse(BaseModel):
-    """LLM-generated advisory for a station."""
+    """Advisory response for a station."""
     station_id: UUID
     station_code: str
     risk_category: Optional[RiskCategory] = None
     summary: str = Field(description="One-paragraph plain-language situation summary")
     recommendation: str = Field(description="Actionable recommendation for stakeholders")
     urgency: str = Field(default="moderate", description="'low' | 'moderate' | 'high' | 'critical'")
+    advisory_source: str = Field(default="template", description="'gemini' (LLM GenAI) or 'template' (Deterministic Fallback)")
     generated_at: datetime
 
 
-# -- Pagination ----------------------------------------------------------------
+# ── Provenance ────────────────────────────────────────────────────────────────
+
+class DataProvenance(BaseModel):
+    """Verified provenance & metadata for the loaded dataset."""
+    dataset_name: str
+    source_organization: str
+    source_portal: str
+    source_url: str
+    ingestion_date: str
+    total_stations: int
+    total_readings: int
+    date_range_start: str
+    date_range_end: str
+    resolved_districts_count: int
+    unresolved_stations_count: int
+    primary_classification_metric: str
+    cgwb_reference: str
+
+
+# ── Dual Classification ───────────────────────────────────────────────────────
+
+class DualClassification(BaseModel):
+    """Side-by-side comparison of CGWB Stage vs Sensor Depth Proxy."""
+    station_id: UUID
+    station_code: str
+    station_name: str
+    district: str
+    state: str
+    block: Optional[str] = None
+    current_depth_m: Optional[float] = None
+    depth_proxy_category: RiskCategory
+    depth_proxy_basis: str
+    stage_of_development: Optional[float] = None
+    stage_category: Optional[RiskCategory] = None
+    stage_basis: Optional[str] = None
+    active_method: str = Field(description="'stage' | 'depth_proxy'")
+    cgwb_citation: Optional[str] = None
+
+
+# ── Alerts ────────────────────────────────────────────────────────────────────
+
+class AlertResponse(BaseModel):
+    """Live notification of risk transition / critical status."""
+    id: UUID
+    station_id: UUID
+    station_code: str
+    station_name: str
+    district: str
+    state: str
+    previous_risk_category: str
+    current_risk_category: str
+    current_depth_m: float
+    alert_type: str
+    message: str
+    notified_roles: List[str]
+    created_at: datetime
+
+
+# ── Pagination ────────────────────────────────────────────────────────────────
 
 class PaginatedStations(BaseModel):
     """Paginated list of station summaries."""

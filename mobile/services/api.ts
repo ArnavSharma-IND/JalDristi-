@@ -11,8 +11,11 @@ import type {
   PaginatedStations,
 } from '../types/station';
 
+// For Android emulator use 10.0.2.2, for iOS simulator or local network use localhost / LAN IP
+const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE_URL,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -27,7 +30,7 @@ export async function fetchStations(params?: {
   const { data } = await api.get<PaginatedStations | Station[]>('/stations', {
     params: {
       page: 1,
-      page_size: 500,
+      page_size: 100,
       ...params,
     },
   });
@@ -69,16 +72,6 @@ export async function fetchAlerts(limit: number = 50): Promise<AlertItem[]> {
 
 export async function fetchDistricts(): Promise<DistrictSummary[]> {
   const { data } = await api.get('/districts');
-  return data;
-}
-
-export async function fetchDistrictStations(district: string): Promise<Station[]> {
-  const { data } = await api.get('/districts/' + encodeURIComponent(district) + '/stations');
-  return data;
-}
-
-export async function fetchHealth(): Promise<{ status: string }> {
-  const { data } = await api.get('/health');
   return data;
 }
 

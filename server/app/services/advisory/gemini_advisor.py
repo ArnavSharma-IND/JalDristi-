@@ -169,6 +169,7 @@ RECOMMENDATION: <your recommendation>
         summary=summary,
         recommendation=recommendation,
         urgency=urgency,
+        advisory_source="gemini",
         generated_at=datetime.now(timezone.utc),
     )
 
@@ -184,7 +185,6 @@ def _generate_template_advisory(
     forecast = compute_forecast(station)
     
     if depth is None:
-        # Station has no depth data yet — can't generate a meaningful advisory
         summary = (
             f"Station {station.station_code} ({station.name}) in {station.district}, "
             f"{station.state} has no water depth readings recorded yet. "
@@ -254,5 +254,6 @@ def _generate_template_advisory(
         summary=summary,
         recommendation=recommendation,
         urgency=urgency,
+        advisory_source="template",
         generated_at=datetime.now(timezone.utc),
     )

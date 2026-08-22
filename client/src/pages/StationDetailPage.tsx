@@ -1,16 +1,38 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import type { StationWithReadings, StationForecast, Advisory } from '../types/station';
-import { fetchStation, fetchStationForecast, fetchStationAdvisory } from '../services/api';
+import type {
+  StationWithReadings,
+  StationForecast,
+  Advisory,
+  DualClassification,
+} from '../types/station';
+import {
+  fetchStation,
+  fetchStationForecast,
+  fetchStationAdvisory,
+  fetchDualClassification,
+} from '../services/api';
 import RiskBadge from '../components/common/RiskBadge';
 import WaterLevelChart from '../components/charts/WaterLevelChart';
-import { ArrowLeft, Brain, ShieldAlert, Sparkles, MapPin, Gauge } from 'lucide-react';
+import DualClassificationCard from '../components/detail/DualClassificationCard';
+import {
+  ArrowLeft,
+  Brain,
+  ShieldCheck,
+  Sparkles,
+  MapPin,
+  Gauge,
+  Bot,
+  FileText,
+  AlertTriangle,
+} from 'lucide-react';
 
 export default function StationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [station, setStation] = useState<StationWithReadings | null>(null);
   const [forecast, setForecast] = useState<StationForecast | null>(null);
   const [advisory, setAdvisory] = useState<Advisory | null>(null);
+  const [dualClassification, setDualClassification] = useState<DualClassification | null>(null);
   const [loadingAdvisory, setLoadingAdvisory] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -22,11 +44,13 @@ export default function StationDetailPage() {
       fetchStation(id),
       fetchStationForecast(id).catch(() => null),
       fetchStationAdvisory(id).catch(() => null),
+      fetchDualClassification(id).catch(() => null),
     ])
-      .then(([stationData, forecastData, advisoryData]) => {
+      .then(([stationData, forecastData, advisoryData, dualData]) => {
         setStation(stationData);
         setForecast(forecastData);
         setAdvisory(advisoryData);
+        setDualClassification(dualData);
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -41,8 +65,8 @@ export default function StationDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-12)', textAlign: 'center' }}>
-        Loading station telemetry &amp; forecasting models...
+      <div style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+        <p style={{ color: 'var(--color-text-muted)' }}>Retrieving DWLR telemetry and telemetry forecast...</p>
       </div>
     );
   }
@@ -50,13 +74,18 @@ export default function StationDetailPage() {
   if (!station) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
-        <h2>Station Not Found</h2>
-        <Link to="/" style={{ marginTop: 'var(--space-4)', display: 'inline-block' }}>
-          ← Return to Dashboard
+        <h2 style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--space-2)' }}>Station Not Found</h2>
+        <p style={{ color: 'var(--color-text-muted)', marginBottom: 'var(--space-4)' }}>
+          Could not find telemetry records for identifier {id}.
+        </p>
+        <Link to="/" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <ArrowLeft size={16} /> Return to Dashboard
         </Link>
       </div>
     );
   }
+
+  const isGeminiAdvisory = advisory?.advisory_source === 'gemini';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -71,6 +100,7 @@ export default function StationDetailPage() {
             fontSize: 'var(--font-size-sm)',
             color: 'var(--color-text-muted)',
             marginBottom: 'var(--space-3)',
+            textDecoration: 'none',
           }}
         >
           <ArrowLeft size={16} /> Back to Monitoring Overview
@@ -83,10 +113,25 @@ export default function StationDetailPage() {
                 {station.station_code}
               </h1>
               <RiskBadge risk={station.current_risk_category} />
+              {station.classification_method === 'stage' && (
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'rgba(34, 197, 94, 0.15)',
+                    color: 'var(--color-safe)',
+                    border: '1px solid rgba(34, 197, 94, 0.3)',
+                    fontWeight: 700,
+                  }}
+                >
+                  CGWB Statutory Stage ({station.stage_of_development?.toFixed(1)}%)
+                </span>
+              )}
             </div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
               <MapPin size={16} color="var(--color-water-primary)" />
-              {station.name} · {station.district}, {station.state} {station.block && `(${station.block} Block)`}
+              {station.name} Ã‚Â· {station.district}, {station.state} {station.block && ( Block)}
             </p>
           </div>
 
@@ -111,7 +156,10 @@ export default function StationDetailPage() {
         </div>
       </div>
 
-      {/* Main Time Series Trend Chart */}
+      {/* Side-by-Side Dual Classification Matrix (Feature #2) */}
+      <DualClassificationCard classification={dualClassification} />
+
+      {/* Main Time Series Trend Chart (Feature #4 & #5 Confidence Badge) */}
       <WaterLevelChart
         readings={station.readings}
         forecast={forecast}
@@ -130,7 +178,7 @@ export default function StationDetailPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', fontSize: 'var(--font-size-sm)' }}>
             <div style={{ background: 'var(--color-bg-secondary)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
               <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>Aquifer Type</span>
-              <div style={{ fontWeight: 600, marginTop: '2px' }}>{station.aquifer_type || 'Alluvial'}</div>
+              <div style={{ fontWeight: 600, marginTop: '2px' }}>{station.aquifer_type || 'Unspecified / Regional'}</div>
             </div>
 
             <div style={{ background: 'var(--color-bg-secondary)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
@@ -143,7 +191,7 @@ export default function StationDetailPage() {
             <div style={{ background: 'var(--color-bg-secondary)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
               <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>Coordinates</span>
               <div style={{ fontFamily: 'monospace', fontWeight: 600, marginTop: '2px' }}>
-                {station.latitude.toFixed(4)}° N, {station.longitude.toFixed(4)}° E
+                {station.latitude.toFixed(4)}Ã‚Â° N, {station.longitude.toFixed(4)}Ã‚Â° E
               </div>
             </div>
 
@@ -154,28 +202,78 @@ export default function StationDetailPage() {
           </div>
         </div>
 
-        {/* AI Advisory Reasoning Panel */}
-        <div className="card" style={{ borderLeft: '4px solid var(--color-water-primary)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        {/* AI Advisory Reasoning Panel with Explicit Provenance (Feature #3) */}
+        <div
+          className="card"
+          style={{
+            borderLeft: isGeminiAdvisory ? '4px solid var(--color-water-primary)' : '4px solid var(--color-accent)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-3)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
               <Brain size={20} color="var(--color-water-primary)" />
-              JalDrishti AI Advisory (Gemini)
-            </h2>
-            {advisory && (
-              <span
-                style={{
-                  fontSize: '0.7rem',
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(14, 165, 233, 0.2)',
-                  color: 'var(--color-water-light)',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                }}
-              >
-                {advisory.urgency} Urgency
-              </span>
-            )}
+              <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600 }}>
+                Stakeholder Action Advisory
+              </h2>
+            </div>
+
+            {/* Honest AI vs Standard Fallback Badge (Feature #3) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              {isGeminiAdvisory ? (
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '3px 8px',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'rgba(14, 165, 233, 0.2)',
+                    color: 'var(--color-water-light)',
+                    border: '1px solid rgba(14, 165, 233, 0.4)',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <Sparkles size={11} /> AI-Generated (Gemini 2.0)
+                </span>
+              ) : (
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '3px 8px',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'rgba(245, 158, 11, 0.15)',
+                    color: 'var(--color-semi-critical)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <ShieldCheck size={11} /> Standard Advisory (Rule-Engine)
+                </span>
+              )}
+
+              {advisory && (
+                <span
+                  style={{
+                    fontSize: '0.7rem',
+                    padding: '2px 8px',
+                    borderRadius: 'var(--radius-full)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {advisory.urgency} Urgency
+                </span>
+              )}
+            </div>
           </div>
 
           {advisory ? (
@@ -206,7 +304,9 @@ export default function StationDetailPage() {
 
           <div style={{ marginTop: 'auto', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
-              Powered by Google Gemini 2.0 Flash
+              {isGeminiAdvisory
+                ? 'Synthesized with Google Gemini 2.0 Flash'
+                : 'Deterministic Fallback: Built with CGWB Standard Mitigation Guidelines'}
             </span>
             <button
               onClick={refreshAdvisory}

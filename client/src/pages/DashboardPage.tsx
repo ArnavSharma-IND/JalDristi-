@@ -1,7 +1,9 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Station } from '../types/station';
 import { fetchStations } from '../services/api';
 import StatsCards from '../components/dashboard/StatsCards';
+import DataProvenanceCard from '../components/dashboard/DataProvenanceCard';
+import AlertFeed from '../components/dashboard/AlertFeed';
 import StationTable from '../components/dashboard/StationTable';
 import StationMap from '../components/map/StationMap';
 import { Droplets, RefreshCw } from 'lucide-react';
@@ -36,7 +38,7 @@ export default function DashboardPage() {
             </h1>
           </div>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)' }}>
-            Real-time DWLR monitoring · CGWB risk categorization · 24-month trend projection
+            Real-time DWLR monitoring · Dual-mode CGWB risk categorization · 24-month trend projection
           </p>
         </div>
 
@@ -66,15 +68,21 @@ export default function DashboardPage() {
         <div className="card" style={{ borderColor: 'var(--color-over-exploited)', background: 'rgba(239, 68, 68, 0.08)' }}>
           <p style={{ color: 'var(--color-over-exploited)', fontWeight: 600 }}>Backend Connection Notice: {error}</p>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)', marginTop: '4px' }}>
-            Ensure the FastAPI server is running (`http://localhost:8000`). Demo seed data can be viewed once backend starts.
+            Ensure the FastAPI server is running (http://localhost:8000).
           </p>
         </div>
       )}
 
-      {/* Metric Cards */}
+      {/* Verified Data Provenance Card (Feature #1) */}
+      <DataProvenanceCard />
+
+      {/* Metric High-Level Cards */}
       <StatsCards stations={stations} />
 
-      {/* Interactive Map */}
+      {/* Real-time Alert & Dispatch Feed (Feature #4) */}
+      <AlertFeed />
+
+      {/* Interactive GIS Map */}
       <StationMap stations={stations} />
 
       {/* Station List Table */}

@@ -1,0 +1,25 @@
+﻿{
+  \"expo\": {
+    \"name\": \"JalDrishti\",
+    \"slug\": \"jaldrishti\",
+    \"version\": \"1.0.0\",
+    \"orientation\": \"portrait\",
+    \"icon\": \"./assets/icon.png\",
+    \"userInterfaceStyle\": \"dark\",
+    \"splash\": {
+      \"backgroundColor\": \"#0b1120\"
+    },
+    \"scheme\": \"jaldrishti\",
+    \"plugins\": [\"expo-router\"],
+    \"android\": {
+      \"adaptiveIcon\": {
+        \"backgroundColor\": \"#0b1120\"
+      },
+      \"package\": \"gov.in.jaldrishti\"
+    },
+    \"ios\": {
+      \"supportsTablet\": true,
+      \"bundleIdentifier\": \"gov.in.jaldrishti\"
+    }
+  }
+}

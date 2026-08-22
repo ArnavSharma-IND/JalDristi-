@@ -1,0 +1,222 @@
+[
+  {
+    "district": "Mehsana",
+    "state": "Gujarat",
+    "block": "Mehsana",
+    "annual_gw_extraction_mcm": 312.4,
+    "net_annual_gw_recharge_mcm": 263.1,
+    "stage_of_development_pct": 118.7,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Mehsana",
+    "state": "Gujarat",
+    "block": "Kadi",
+    "annual_gw_extraction_mcm": 289.1,
+    "net_annual_gw_recharge_mcm": 255.4,
+    "stage_of_development_pct": 113.2,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Mehsana",
+    "state": "Gujarat",
+    "block": "Visnagar",
+    "annual_gw_extraction_mcm": 198.5,
+    "net_annual_gw_recharge_mcm": 182.3,
+    "stage_of_development_pct": 108.9,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Mehsana",
+    "state": "Gujarat",
+    "block": "Vijapur",
+    "annual_gw_extraction_mcm": 220.6,
+    "net_annual_gw_recharge_mcm": 210.0,
+    "stage_of_development_pct": 105.0,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Mehsana",
+    "state": "Gujarat",
+    "block": "Unjha",
+    "annual_gw_extraction_mcm": 154.2,
+    "net_annual_gw_recharge_mcm": 160.1,
+    "stage_of_development_pct": 96.3,
+    "cgwb_category": "Critical",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Mehsana",
+    "state": "Gujarat",
+    "block": "Vadnagar",
+    "annual_gw_extraction_mcm": 135.0,
+    "net_annual_gw_recharge_mcm": 158.0,
+    "stage_of_development_pct": 85.4,
+    "cgwb_category": "Semi-Critical",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Mehsana",
+    "state": "Gujarat",
+    "block": "Kheralu",
+    "annual_gw_extraction_mcm": 110.2,
+    "net_annual_gw_recharge_mcm": 145.0,
+    "stage_of_development_pct": 76.0,
+    "cgwb_category": "Semi-Critical",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Jaipur",
+    "state": "Rajasthan",
+    "block": "Jaipur",
+    "annual_gw_extraction_mcm": 390.8,
+    "net_annual_gw_recharge_mcm": 245.0,
+    "stage_of_development_pct": 159.5,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Jaipur",
+    "state": "Rajasthan",
+    "block": "Amer",
+    "annual_gw_extraction_mcm": 185.4,
+    "net_annual_gw_recharge_mcm": 142.1,
+    "stage_of_development_pct": 130.5,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Jaipur",
+    "state": "Rajasthan",
+    "block": "Sanganer",
+    "annual_gw_extraction_mcm": 245.2,
+    "net_annual_gw_recharge_mcm": 180.0,
+    "stage_of_development_pct": 136.2,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Jaipur",
+    "state": "Rajasthan",
+    "block": "Jhotwara",
+    "annual_gw_extraction_mcm": 210.5,
+    "net_annual_gw_recharge_mcm": 165.2,
+    "stage_of_development_pct": 127.4,
+    "cgwb_category": "Over-Exploited",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Jaipur",
+    "state": "Rajasthan",
+    "block": "Bassi",
+    "annual_gw_extraction_mcm": 175.4,
+    "net_annual_gw_recharge_mcm": 185.0,
+    "stage_of_development_pct": 94.8,
+    "cgwb_category": "Critical",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Jaipur",
+    "state": "Rajasthan",
+    "block": "Chaksu",
+    "annual_gw_extraction_mcm": 142.1,
+    "net_annual_gw_recharge_mcm": 160.5,
+    "stage_of_development_pct": 88.5,
+    "cgwb_category": "Semi-Critical",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Jaipur",
+    "state": "Rajasthan",
+    "block": "Phagi",
+    "annual_gw_extraction_mcm": 120.0,
+    "net_annual_gw_recharge_mcm": 180.0,
+    "stage_of_development_pct": 66.7,
+    "cgwb_category": "Safe",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Nagpur",
+    "state": "Maharashtra",
+    "block": "Nagpur",
+    "annual_gw_extraction_mcm": 145.2,
+    "net_annual_gw_recharge_mcm": 152.0,
+    "stage_of_development_pct": 95.5,
+    "cgwb_category": "Critical",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Nagpur",
+    "state": "Maharashtra",
+    "block": "Hingna",
+    "annual_gw_extraction_mcm": 78.4,
+    "net_annual_gw_recharge_mcm": 102.0,
+    "stage_of_development_pct": 76.9,
+    "cgwb_category": "Semi-Critical",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Nagpur",
+    "state": "Maharashtra",
+    "block": "Kamptee",
+    "annual_gw_extraction_mcm": 82.1,
+    "net_annual_gw_recharge_mcm": 120.5,
+    "stage_of_development_pct": 68.1,
+    "cgwb_category": "Safe",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Nagpur",
+    "state": "Maharashtra",
+    "block": "Saoner",
+    "annual_gw_extraction_mcm": 90.0,
+    "net_annual_gw_recharge_mcm": 145.0,
+    "stage_of_development_pct": 62.1,
+    "cgwb_category": "Safe",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Nagpur",
+    "state": "Maharashtra",
+    "block": "Kalmeshwar",
+    "annual_gw_extraction_mcm": 85.0,
+    "net_annual_gw_recharge_mcm": 125.0,
+    "stage_of_development_pct": 68.0,
+    "cgwb_category": "Safe",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  },
+  {
+    "district": "Nagpur",
+    "state": "Maharashtra",
+    "block": "Umred",
+    "annual_gw_extraction_mcm": 65.4,
+    "net_annual_gw_recharge_mcm": 130.0,
+    "stage_of_development_pct": 50.3,
+    "cgwb_category": "Safe",
+    "report_year": 2023,
+    "source": "CGWB Dynamic Ground Water Resources of India, 2023 (Annexure-III)"
+  }
+]
