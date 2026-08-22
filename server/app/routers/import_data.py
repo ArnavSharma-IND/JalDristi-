@@ -5,11 +5,12 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from app.models.database import get_sync_db as get_db
 from app.services.ingestion import process_telemetry_batch
+from app.dependencies import verify_admin_token
 
 router = APIRouter(prefix="/import", tags=["Data Import"])
 
 
-@router.post("/telemetry")
+@router.post("/telemetry", dependencies=[Depends(verify_admin_token)])
 async def upload_historical_telemetry(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Accepts a CSV file of historical telemetry and processes it through the validation pipeline."""
     if not file.filename.endswith('.csv'):

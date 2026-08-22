@@ -44,7 +44,7 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm transition-opacity">
       <div className="bg-slate-900 border border-slate-700 w-full max-w-5xl max-h-[85vh] overflow-y-auto rounded-xl shadow-2xl p-6 text-slate-200 relative">
-        
+
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-800 pb-4 sticky top-0 bg-slate-900 z-10">
           <div>
@@ -76,7 +76,7 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
           </div>
         ) : (
           <div className="space-y-6 mt-6">
-            
+
             {/* Dual Classification Banner */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-3.5 rounded-lg border border-cyan-800/40 bg-cyan-950/20">
@@ -130,13 +130,12 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
                   Telemetry Time-Series & 30-Day Regression Forecast
                 </h3>
                 {data?.sensor_health && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                    data.sensor_health.status === 'HEALTHY'
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${data.sensor_health.status === 'HEALTHY'
                       ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300'
                       : data.sensor_health.status === 'STALE'
-                      ? 'bg-amber-950/60 border-amber-700 text-amber-300'
-                      : 'bg-rose-950/60 border-rose-700 text-rose-300'
-                  }`}>
+                        ? 'bg-amber-950/60 border-amber-700 text-amber-300'
+                        : 'bg-rose-950/60 border-rose-700 text-rose-300'
+                    }`}>
                     Sensor: {data.sensor_health.status}
                   </span>
                 )}
@@ -149,11 +148,10 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
               <div className="p-4 rounded-lg border border-slate-800 bg-slate-950">
                 <div className="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Hydrological Advisory</h3>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                    advisory.source === 'AI-GENERATED'
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${advisory.source === 'AI-GENERATED'
                       ? 'bg-purple-950/60 border-purple-700 text-purple-300'
                       : 'bg-slate-800 border-slate-600 text-slate-300'
-                  }`}>
+                    }`}>
                     {advisory.source}
                   </span>
                 </div>

@@ -10,6 +10,7 @@ import random
 import io
 import csv
 
+from sqlalchemy import func
 from app.models.database import get_sync_db as get_db
 from app.models.station import Station, TelemetryReading, RiskLevel
 from app.schemas.telemetry import StationDetailResponse
@@ -27,29 +28,47 @@ def list_stations(
     risk: Optional[RiskLevel] = None,
     db: Session = Depends(get_db)
 ):
-    query = db.query(Station).filter(Station.is_active == True)
+    """
+    Highly optimized query using SQL subqueries to eliminate the N+1 problem.
+    Fetches stations and their latest telemetry reading in a single database roundtrip.
+    """
+    # 1. Subquery to find the most recent telemetry timestamp per station
+    subquery = db.query(
+        TelemetryReading.station_id,
+        func.max(TelemetryReading.timestamp).label("max_time")
+    ).group_by(TelemetryReading.station_id).subquery()
+
+    # 2. Join Station with TelemetryReading filtered by latest timestamp
+    query = db.query(Station, TelemetryReading).outerjoin(
+        subquery, (Station.station_id == subquery.c.station_id) | (Station.id == subquery.c.station_id)
+    ).outerjoin(
+        TelemetryReading,
+        ((TelemetryReading.station_id == subquery.c.station_id) | (TelemetryReading.station_id == Station.id)) &
+        (TelemetryReading.timestamp == subquery.c.max_time)
+    ).filter(Station.is_active == True)
+
+    # 3. Apply Filters
     if district:
         query = query.filter(Station.district.ilike(f"%{district}%"))
     if risk:
         query = query.filter(Station.telemetry_risk_indicator == risk)
 
-    stations = query.all()
+    # 4. Execute single query and deduplicate
     results = []
-    for s in stations:
-        latest_reading = db.query(TelemetryReading)\
-            .filter(TelemetryReading.station_id == s.id)\
-            .order_by(TelemetryReading.timestamp.desc())\
-            .first()
-
+    seen = set()
+    for station, latest_reading in query.all():
+        if station.id in seen:
+            continue
+        seen.add(station.id)
         results.append({
-            "station_id": s.station_id,
-            "name": s.name,
-            "district": s.district,
-            "state": s.state,
-            "latitude": s.latitude,
-            "longitude": s.longitude,
-            "official_cgwb_status": s.official_cgwb_status.value if hasattr(s.official_cgwb_status, "value") else (s.official_cgwb_status or "INSUFFICIENT_DATA"),
-            "telemetry_risk": s.telemetry_risk_indicator.value if hasattr(s.telemetry_risk_indicator, "value") else (s.telemetry_risk_indicator or "INSUFFICIENT_DATA"),
+            "station_id": station.station_id,
+            "name": station.name,
+            "district": station.district,
+            "state": station.state,
+            "latitude": station.latitude,
+            "longitude": station.longitude,
+            "official_cgwb_status": station.official_cgwb_status.value if hasattr(station.official_cgwb_status, "value") else (station.official_cgwb_status or "INSUFFICIENT_DATA"),
+            "telemetry_risk": station.telemetry_risk_indicator.value if hasattr(station.telemetry_risk_indicator, "value") else (station.telemetry_risk_indicator or "INSUFFICIENT_DATA"),
             "latest_water_level_m_bgl": latest_reading.water_level_m_bgl if latest_reading else None,
             "last_updated": latest_reading.timestamp if latest_reading else None
         })
