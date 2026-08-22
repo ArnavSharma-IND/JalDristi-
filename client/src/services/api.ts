@@ -92,7 +92,29 @@ export const apiService = {
       processing_method: string;
       is_simulated_for_demo: boolean;
     }>('/provenance');
-  }
+  },
+
+  simulatePing: async (stationId?: string) => {
+    const url = `${API_BASE_URL}/stations/simulate-ping${stationId ? `?station_id=${stationId}` : ''}`;
+    const res = await fetch(url, { method: 'POST' });
+    if (!res.ok) throw new Error('Simulation request failed');
+    return res.json();
+  },
+
+  getAquiferSummary: () => {
+    return fetchWithErrorHandling<{
+      total_active_dwlr: number;
+      monitored_readings_count: number;
+      average_aquifer_depth_m_bgl: number;
+      critical_count: number;
+      over_exploited_count: number;
+      safe_count: number;
+      resource_stress_index: number;
+      aquifer_health_rating: string;
+    }>('/stations/analytics/aquifer-summary');
+  },
+
+  getExportCsvUrl: () => `${API_BASE_URL}/stations/export/csv`
 };
 
 // ── Compatible Legacy & Helper API Functions ──────────────────────────────────
