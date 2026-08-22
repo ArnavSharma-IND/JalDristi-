@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import type {
   Station,
   StationWithReadings,
@@ -13,8 +13,6 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ── Stations ──────────────────────────────────────────────────────────────
-
 export async function fetchStations(params?: {
   district?: string;
   state?: string;
@@ -25,21 +23,19 @@ export async function fetchStations(params?: {
 }
 
 export async function fetchStation(id: string): Promise<StationWithReadings> {
-  const { data } = await api.get(/stations/\);
+  const { data } = await api.get('/stations/' + id);
   return data;
 }
 
 export async function fetchStationForecast(id: string): Promise<StationForecast> {
-  const { data } = await api.get(/stations/\/forecast);
+  const { data } = await api.get('/stations/' + id + '/forecast');
   return data;
 }
 
 export async function fetchStationAdvisory(id: string): Promise<Advisory> {
-  const { data } = await api.get(/stations/\/advisory);
+  const { data } = await api.get('/stations/' + id + '/advisory');
   return data;
 }
-
-// ── Districts ─────────────────────────────────────────────────────────────
 
 export async function fetchDistricts(): Promise<DistrictSummary[]> {
   const { data } = await api.get('/districts');
@@ -47,11 +43,9 @@ export async function fetchDistricts(): Promise<DistrictSummary[]> {
 }
 
 export async function fetchDistrictStations(district: string): Promise<Station[]> {
-  const { data } = await api.get(/districts/\/stations);
+  const { data } = await api.get('/districts/' + encodeURIComponent(district) + '/stations');
   return data;
 }
-
-// ── Health ─────────────────────────────────────────────────────────────────
 
 export async function fetchHealth(): Promise<{ status: string }> {
   const { data } = await api.get('/health');

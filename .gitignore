@@ -53,3 +53,7 @@ coverage.xml
 # Celery
 celerybeat-schedule
 celerybeat.pid
+
+# SQLite databases
+*.db
+jaldrishti.db

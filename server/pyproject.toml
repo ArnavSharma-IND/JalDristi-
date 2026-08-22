@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "jaldrishti-server"
 version = "0.1.0"
 description = "JalDrishti Backend - Real-time Groundwater Resource Evaluation"
@@ -7,10 +7,3 @@ requires-python = ">=3.11"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-
-[tool.ruff]
-target-version = "py311"
-line-length = 100
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP"]

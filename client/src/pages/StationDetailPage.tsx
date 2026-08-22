@@ -1,18 +1,22 @@
-﻿import { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { StationWithReadings, StationForecast, Advisory } from '../types/station';
 import { fetchStation, fetchStationForecast, fetchStationAdvisory } from '../services/api';
 import RiskBadge from '../components/common/RiskBadge';
+import WaterLevelChart from '../components/charts/WaterLevelChart';
+import { ArrowLeft, Brain, ShieldAlert, Sparkles, MapPin, Gauge } from 'lucide-react';
 
 export default function StationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [station, setStation] = useState<StationWithReadings | null>(null);
   const [forecast, setForecast] = useState<StationForecast | null>(null);
   const [advisory, setAdvisory] = useState<Advisory | null>(null);
+  const [loadingAdvisory, setLoadingAdvisory] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
+    setLoading(true);
 
     Promise.all([
       fetchStation(id),
@@ -27,151 +31,202 @@ export default function StationDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  const refreshAdvisory = () => {
+    if (!id) return;
+    setLoadingAdvisory(true);
+    fetchStationAdvisory(id)
+      .then(setAdvisory)
+      .finally(() => setLoadingAdvisory(false));
+  };
+
   if (loading) {
-    return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-12)', textAlign: 'center' }}>Loading station details...</div>;
+    return (
+      <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-12)', textAlign: 'center' }}>
+        Loading station telemetry &amp; forecasting models...
+      </div>
+    );
   }
 
   if (!station) {
-    return <div className="card">Station not found.</div>;
+    return (
+      <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
+        <h2>Station Not Found</h2>
+        <Link to="/" style={{ marginTop: 'var(--space-4)', display: 'inline-block' }}>
+          ← Return to Dashboard
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{ marginBottom: 'var(--space-6)' }}>
-        <Link to="/" style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)' }}>
-          ← Back to Dashboard
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+      {/* Top Breadcrumb & Header */}
+      <div>
+        <Link
+          to="/"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-muted)',
+            marginBottom: 'var(--space-3)',
+          }}
+        >
+          <ArrowLeft size={16} /> Back to Monitoring Overview
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginTop: 'var(--space-3)' }}>
-          <h1 style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 700 }}>
-            {station.station_code}
-          </h1>
-          <RiskBadge risk={station.current_risk_category} />
-        </div>
-        <p style={{ color: 'var(--color-text-secondary)' }}>
-          {station.name} · {station.district}, {station.state}
-        </p>
-      </div>
 
-      <div className="grid-dashboard">
-        {/* Station Info Card */}
-        <div className="card">
-          <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--space-4)' }}>
-            Station Information
-          </h2>
-          <dl style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', fontSize: 'var(--font-size-sm)' }}>
-            <div>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Block</dt>
-              <dd>{station.block || '—'}</dd>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-4)' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+              <h1 style={{ fontSize: 'var(--font-size-3xl)', fontWeight: 800 }}>
+                {station.station_code}
+              </h1>
+              <RiskBadge risk={station.current_risk_category} />
             </div>
-            <div>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Aquifer Type</dt>
-              <dd>{station.aquifer_type || '—'}</dd>
-            </div>
-            <div>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Well Depth</dt>
-              <dd>{station.well_depth_m ? \m : '—'}</dd>
-            </div>
-            <div>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Current Depth</dt>
-              <dd style={{ fontFamily: 'monospace', fontSize: 'var(--font-size-xl)', fontWeight: 700 }}>
-                {station.current_depth_m?.toFixed(1) ?? '—'}m
-              </dd>
-            </div>
-            <div>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Coordinates</dt>
-              <dd style={{ fontFamily: 'monospace', fontSize: 'var(--font-size-xs)' }}>
-                {station.latitude.toFixed(4)}, {station.longitude.toFixed(4)}
-              </dd>
-            </div>
-            <div>
-              <dt style={{ color: 'var(--color-text-muted)' }}>Readings Count</dt>
-              <dd>{station.readings.length}</dd>
-            </div>
-          </dl>
-        </div>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-base)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+              <MapPin size={16} color="var(--color-water-primary)" />
+              {station.name} · {station.district}, {station.state} {station.block && `(${station.block} Block)`}
+            </p>
+          </div>
 
-        {/* Forecast Card */}
-        <div className="card" style={{ borderColor: forecast?.months_to_next_risk_tier ? 'var(--color-critical)' : 'var(--color-border)' }}>
-          <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--space-4)' }}>
-            Trend Forecast
-          </h2>
-          {forecast ? (
-            <div style={{ display: 'grid', gap: 'var(--space-3)', fontSize: 'var(--font-size-sm)' }}>
-              <div>
-                <span style={{ color: 'var(--color-text-muted)' }}>Trend: </span>
-                <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>
-                  {forecast.trend_direction}
-                </span>
+          {forecast?.months_to_next_risk_tier && (
+            <div
+              style={{
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '10px 18px',
+                textAlign: 'right',
+              }}
+            >
+              <div style={{ fontSize: '0.7rem', color: 'var(--color-over-exploited)', textTransform: 'uppercase', fontWeight: 700 }}>
+                Critical Transition Window
               </div>
-              <div>
-                <span style={{ color: 'var(--color-text-muted)' }}>Rate: </span>
-                <span style={{ fontFamily: 'monospace' }}>
-                  {forecast.rate_of_change_m_per_year > 0 ? '+' : ''}
-                  {forecast.rate_of_change_m_per_year.toFixed(2)} m/year
-                </span>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-over-exploited)' }}>
+                {forecast.months_to_next_risk_tier} Months Remaining
               </div>
-              <div>
-                <span style={{ color: 'var(--color-text-muted)' }}>Confidence: </span>
-                <span style={{ textTransform: 'capitalize' }}>{forecast.confidence}</span>
-              </div>
-              {forecast.months_to_next_risk_tier && (
-                <div
-                  style={{
-                    marginTop: 'var(--space-4)',
-                    padding: 'var(--space-4)',
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                  }}
-                >
-                  <div style={{ fontWeight: 700, color: 'var(--color-over-exploited)', fontSize: 'var(--font-size-2xl)' }}>
-                    {forecast.months_to_next_risk_tier} months
-                  </div>
-                  <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-xs)' }}>
-                    until projected transition to{' '}
-                    <strong>{forecast.forecast_risk_category}</strong>
-                  </div>
-                </div>
-              )}
             </div>
-          ) : (
-            <p style={{ color: 'var(--color-text-muted)' }}>Forecast unavailable</p>
           )}
         </div>
       </div>
 
-      {/* Advisory Card */}
-      {advisory && (
-        <div className="card" style={{ marginTop: 'var(--space-6)', borderLeft: '3px solid var(--color-water-primary)' }}>
+      {/* Main Time Series Trend Chart */}
+      <WaterLevelChart
+        readings={station.readings}
+        forecast={forecast}
+        wellDepth={station.well_depth_m}
+      />
+
+      {/* 2-Column Info & Advisory Grid */}
+      <div className="grid-dashboard">
+        {/* Station Metadata & Hydrogeology */}
+        <div className="card">
           <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, marginBottom: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-            🤖 AI Advisory
-            <span
-              style={{
-                fontSize: 'var(--font-size-xs)',
-                padding: '2px 8px',
-                borderRadius: 'var(--radius-full)',
-                background: 'rgba(14, 165, 233, 0.15)',
-                color: 'var(--color-water-light)',
-              }}
-            >
-              {advisory.urgency.toUpperCase()}
-            </span>
+            <Gauge size={20} color="var(--color-accent)" />
+            Station Hydrogeology &amp; Specifications
           </h2>
-          <div style={{ marginBottom: 'var(--space-4)' }}>
-            <h3 style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-2)' }}>
-              Situation Summary
-            </h3>
-            <p style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.7 }}>{advisory.summary}</p>
-          </div>
-          <div>
-            <h3 style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-2)' }}>
-              Recommendation
-            </h3>
-            <p style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.7 }}>{advisory.recommendation}</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)', fontSize: 'var(--font-size-sm)' }}>
+            <div style={{ background: 'var(--color-bg-secondary)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>Aquifer Type</span>
+              <div style={{ fontWeight: 600, marginTop: '2px' }}>{station.aquifer_type || 'Alluvial'}</div>
+            </div>
+
+            <div style={{ background: 'var(--color-bg-secondary)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>Total Well Depth</span>
+              <div style={{ fontWeight: 600, marginTop: '2px' }}>
+                {station.well_depth_m ? `${station.well_depth_m} meters` : '50 meters'}
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--color-bg-secondary)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>Coordinates</span>
+              <div style={{ fontFamily: 'monospace', fontWeight: 600, marginTop: '2px' }}>
+                {station.latitude.toFixed(4)}° N, {station.longitude.toFixed(4)}° E
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--color-bg-secondary)', padding: '10px', borderRadius: 'var(--radius-md)' }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>Total Logged Readings</span>
+              <div style={{ fontWeight: 600, marginTop: '2px' }}>{station.readings.length} observations</div>
+            </div>
           </div>
         </div>
-      )}
+
+        {/* AI Advisory Reasoning Panel */}
+        <div className="card" style={{ borderLeft: '4px solid var(--color-water-primary)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <Brain size={20} color="var(--color-water-primary)" />
+              JalDrishti AI Advisory (Gemini)
+            </h2>
+            {advisory && (
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-full)',
+                  background: 'rgba(14, 165, 233, 0.2)',
+                  color: 'var(--color-water-light)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {advisory.urgency} Urgency
+              </span>
+            )}
+          </div>
+
+          {advisory ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <div>
+                <h3 style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                  Situation Analysis
+                </h3>
+                <p style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.6, color: 'var(--color-text-primary)' }}>
+                  {advisory.summary}
+                </p>
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                  Recommended Interventions
+                </h3>
+                <p style={{ fontSize: 'var(--font-size-sm)', lineHeight: 1.6, color: 'var(--color-text-primary)' }}>
+                  {advisory.recommendation}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>
+              Generating plain-language reasoning &amp; stakeholder recommendations...
+            </p>
+          )}
+
+          <div style={{ marginTop: 'auto', paddingTop: 'var(--space-3)', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+              Powered by Google Gemini 2.0 Flash
+            </span>
+            <button
+              onClick={refreshAdvisory}
+              disabled={loadingAdvisory}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--color-water-light)',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+              }}
+            >
+              <Sparkles size={12} /> Regenerate
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

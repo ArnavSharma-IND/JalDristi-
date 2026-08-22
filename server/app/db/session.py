@@ -1,14 +1,16 @@
 ﻿"""Database session management."""
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-
 from app.core.config import settings
+
+engine_kwargs = {"echo": False}
+if "sqlite" not in settings.database_url:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
 
 engine = create_async_engine(
     settings.database_url,
-    echo=settings.APP_DEBUG,
-    pool_size=10,
-    max_overflow=20,
+    **engine_kwargs
 )
 
 async_session_factory = async_sessionmaker(

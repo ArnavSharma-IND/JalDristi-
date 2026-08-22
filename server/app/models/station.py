@@ -1,13 +1,9 @@
 ﻿"""
 Station model — represents a DWLR monitoring station.
-
-Each station has a fixed geographic location and belongs to a district/state.
 """
 
 import uuid
-
-from sqlalchemy import Column, String, Float, Integer, Enum as SAEnum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Float, Integer, Enum as SAEnum, Uuid
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base, TimestampMixin
@@ -17,7 +13,7 @@ from app.core.constants import RiskCategory
 class Station(Base, TimestampMixin):
     __tablename__ = "stations"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     station_code = Column(String(50), unique=True, nullable=False, index=True)
     name = Column(String(200), nullable=False)
 
@@ -35,9 +31,9 @@ class Station(Base, TimestampMixin):
     aquifer_type = Column(String(100), nullable=True)
     well_depth_m = Column(Float, nullable=True)
 
-    # Current classification (updated on each recalculation)
+    # Current classification
     current_risk_category = Column(
-        SAEnum(RiskCategory, name="risk_category"),
+        SAEnum(RiskCategory, name="risk_category", native_enum=False, values_callable=lambda obj: [e.value for e in obj]),
         nullable=True,
     )
     current_depth_m = Column(Float, nullable=True)
@@ -45,7 +41,7 @@ class Station(Base, TimestampMixin):
     # Forecast
     months_to_next_risk_tier = Column(Integer, nullable=True)
     forecast_risk_category = Column(
-        SAEnum(RiskCategory, name="risk_category", create_constraint=False),
+        SAEnum(RiskCategory, name="risk_category", native_enum=False, create_constraint=False, values_callable=lambda obj: [e.value for e in obj]),
         nullable=True,
     )
 
