@@ -15,6 +15,7 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
 
   useEffect(() => {
     let isMounted = true;
+    document.body.classList.add('modal-open');
     async function loadData() {
       try {
         setIsLoading(true);
@@ -34,15 +35,18 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
       }
     }
     loadData();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+      document.body.classList.remove('modal-open');
+    };
   }, [stationId]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl p-6 text-slate-200">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm transition-opacity">
+      <div className="bg-slate-900 border border-slate-700 w-full max-w-5xl max-h-[85vh] overflow-y-auto rounded-xl shadow-2xl p-6 text-slate-200 relative">
         
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-800 pb-4">
+        <div className="flex items-start justify-between border-b border-slate-800 pb-4 sticky top-0 bg-slate-900 z-10">
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-white">{data?.name || stationId}</h2>
@@ -56,7 +60,7 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white px-3 py-1 rounded bg-slate-800 border border-slate-700 text-sm cursor-pointer"
+            className="text-slate-400 hover:text-white px-4 py-2 rounded bg-slate-800 border border-slate-700 text-sm font-bold cursor-pointer transition-colors"
           >
             Close
           </button>

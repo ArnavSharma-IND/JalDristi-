@@ -47,7 +47,8 @@ export interface AdvisoryResponse {
   source: 'AI-GENERATED' | 'RULE-BASED FALLBACK';
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
 
 export async function fetchWithErrorHandling<T>(url: string): Promise<T> {
   const normalizedUrl = url.startsWith('/') ? url : `/${url}`;

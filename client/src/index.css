@@ -2,7 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Leaflet map popup override for dark mode consistency */
+/* FIX 1: Prevent Leaflet from bleeding over modals */
+.leaflet-container, 
+.leaflet-pane, 
+.leaflet-top, 
+.leaflet-bottom, 
+.leaflet-control {
+  z-index: 10 !important; 
+}
+
+/* FIX 2: Dark mode popup styling */
 .station-leaflet-popup .leaflet-popup-content-wrapper {
   background-color: #0f172a;
   color: #f1f5f9;
@@ -12,6 +21,11 @@
 .station-leaflet-popup .leaflet-popup-tip {
   background-color: #0f172a;
   border: 1px solid #334155;
+}
+
+/* FIX 3: Prevent body scrolling when modal is open (reduces lag) */
+body.modal-open {
+  overflow: hidden;
 }
 
 /* Custom scrollbars */
