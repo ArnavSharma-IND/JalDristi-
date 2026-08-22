@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import type {
   Station,
   StationWithReadings,
@@ -11,8 +11,92 @@ import type {
   PaginatedStations,
 } from '../types/station';
 
+export interface StationSummary {
+  station_id: string;
+  name: string;
+  district: string;
+  state: string;
+  latitude: number;
+  longitude: number;
+  official_cgwb_status: 'SAFE' | 'SEMI_CRITICAL' | 'CRITICAL' | 'OVER_EXPLOITED' | 'INSUFFICIENT_DATA';
+  telemetry_risk: 'SAFE' | 'SEMI_CRITICAL' | 'CRITICAL' | 'OVER_EXPLOITED' | 'INSUFFICIENT_DATA';
+  latest_water_level_m_bgl: number | null;
+  last_updated: string | null;
+}
+
+export interface ForecastData {
+  model_type: string;
+  observation_count: number;
+  historical_duration_days?: number;
+  forecast_horizon_days: number;
+  slope_m_per_day: number;
+  r_squared: number | null;
+  trend_direction: 'STABLE' | 'DEPLETING' | 'RECHARGING' | 'UNKNOWN';
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT_DATA';
+  projected_water_level: number | null;
+  reason: string;
+}
+
+export interface AdvisoryResponse {
+  situation: string;
+  risk_explanation: string;
+  trend: string;
+  recommended_actions: string[];
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  data_confidence: string;
+  source: 'AI-GENERATED' | 'RULE-BASED FALLBACK';
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+
+export async function fetchWithErrorHandling<T>(url: string): Promise<T> {
+  const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+  const res = await fetch(`${API_BASE_URL}${normalizedUrl}`);
+  if (!res.ok) {
+    let errorDetail = 'API Request Failed';
+    try {
+      const errorJson = await res.json();
+      errorDetail = errorJson.detail?.error?.message || errorJson.detail || errorDetail;
+    } catch {
+      errorDetail = `HTTP Error ${res.status}: ${res.statusText}`;
+    }
+    throw new Error(errorDetail);
+  }
+  return res.json();
+}
+
+export const apiService = {
+  getStations: (params?: { district?: string; risk?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.district) query.append('district', params.district);
+    if (params?.risk) query.append('risk', params.risk);
+    const queryString = query.toString() ? `?${query.toString()}` : '';
+    return fetchWithErrorHandling<StationSummary[]>(`/stations${queryString}`);
+  },
+
+  getStationDetail: (id: string) => {
+    return fetchWithErrorHandling<any>(`/stations/${id}`);
+  },
+
+  getStationAdvisory: (id: string) => {
+    return fetchWithErrorHandling<AdvisoryResponse>(`/stations/${id}/advisory`);
+  },
+
+  getProvenance: () => {
+    return fetchWithErrorHandling<{
+      source: string;
+      dataset_name: string;
+      time_period: string;
+      coverage: string;
+      processing_method: string;
+      is_simulated_for_demo: boolean;
+    }>('/provenance');
+  }
+};
+
+// ── Compatible Legacy & Helper API Functions ──────────────────────────────────
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE_URL,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });

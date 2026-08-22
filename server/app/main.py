@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.routes import stations, districts, health, advisory, provenance, classification, alerts
+from app.routers.stations import router as telemetry_stations_router
 from app.db.session import engine
 from app.models import base  # noqa: F401 — registers models with SQLAlchemy
 
@@ -81,7 +82,9 @@ async def redirect_redoc():
 # ── Routes ────────────────────────────────────────────────────────────────────
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(provenance.router, prefix="/api/v1", tags=["Data Provenance"])
-app.include_router(stations.router, prefix="/api/v1", tags=["Stations"])
+app.include_router(stations.router, prefix="/api/v1", tags=["Stations (Detailed)"])
+app.include_router(telemetry_stations_router, prefix="/api/v1", tags=["Stations (Telemetry)"])
+app.include_router(telemetry_stations_router, tags=["Stations Direct"])
 app.include_router(classification.router, prefix="/api/v1", tags=["Classification"])
 app.include_router(districts.router, prefix="/api/v1", tags=["Districts"])
 app.include_router(advisory.router, prefix="/api/v1", tags=["Advisory"])

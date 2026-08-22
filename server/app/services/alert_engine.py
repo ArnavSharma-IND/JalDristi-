@@ -1,0 +1,58 @@
+"""
+Transition-Based Alert Engine.
+Tracks actual risk boundary transitions and persistent critical states to prevent alert spam.
+"""
+
+from datetime import datetime, timezone
+from typing import Optional, Dict, Any
+from app.models.station import RiskLevel
+
+SEVERITY_MAP = {
+    RiskLevel.SAFE: "INFO",
+    RiskLevel.SEMI_CRITICAL: "WARNING",
+    RiskLevel.CRITICAL: "HIGH",
+    RiskLevel.OVER_EXPLOITED: "CRITICAL",
+    RiskLevel.INSUFFICIENT_DATA: "LOW"
+}
+
+
+def process_risk_transition(
+    station_id: str,
+    district: str,
+    previous_risk: RiskLevel,
+    current_risk: RiskLevel,
+    current_water_level: float
+) -> Optional[Dict[str, Any]]:
+    """
+    Emits an alert payload ONLY when a state transition occurs or high-risk thresholds persist.
+    """
+    if previous_risk == current_risk and current_risk not in [RiskLevel.CRITICAL, RiskLevel.OVER_EXPLOITED]:
+        return None
+
+    # Determine alert categorization
+    if previous_risk != current_risk:
+        if current_risk in [RiskLevel.CRITICAL, RiskLevel.OVER_EXPLOITED]:
+            event_type = "ESCALATION"
+            reason = f"Water level depleted to {current_water_level:.2f} m bgl. Risk transitioned from {previous_risk.value} to {current_risk.value}."
+        elif previous_risk in [RiskLevel.CRITICAL, RiskLevel.OVER_EXPLOITED] and current_risk in [RiskLevel.SAFE, RiskLevel.SEMI_CRITICAL]:
+            event_type = "RECOVERY"
+            reason = f"Water level recharged to {current_water_level:.2f} m bgl. State improved from {previous_risk.value} to {current_risk.value}."
+        else:
+            event_type = "STATUS_CHANGE"
+            reason = f"Risk reclassified from {previous_risk.value} to {current_risk.value}."
+    else:
+        event_type = "PERSISTENT_CRITICAL"
+        reason = f"Station remains at critical level ({current_water_level:.2f} m bgl)."
+
+    return {
+        "station_id": station_id,
+        "district": district,
+        "event_type": event_type,
+        "severity": SEVERITY_MAP.get(current_risk, "INFO"),
+        "previous_state": previous_risk.value,
+        "new_state": current_risk.value,
+        "current_water_level_m_bgl": current_water_level,
+        "reason": reason,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "ACTIVE"
+    }
