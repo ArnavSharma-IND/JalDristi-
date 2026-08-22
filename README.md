@@ -54,7 +54,7 @@ India relies heavily on groundwater for ~85% of rural drinking water and ~60% of
 
 ## 🏗️ System Architecture
 
-`mermaid
+```mermaid
 graph TD
     A["Raw DWLR Sensor Data<br/>(415k+ Telemetry Readings)"] --> B["Data Processing Pipeline<br/>(Validation & Dedup)"]
     B --> C["PostgreSQL / SQLite Database<br/>(6,424 Stations + Readings)"]
@@ -69,7 +69,7 @@ graph TD
     
     F --> H["Web Dashboard<br/>(React 19 + Vite + Glassmorphism UI)"]
     F --> I["Mobile Companion<br/>(React Native + Expo Router)"]
-`
+```
 
 ---
 
@@ -81,7 +81,7 @@ graph TD
 | **Data & Pipeline** | Pandas, NumPy (polyfit linear modeling), Celery, Redis |
 | **Database** | PostgreSQL 16 / SQLite (async driver) |
 | **AI / GenAI** | Google Gemini 2.0 Flash (google-genai SDK) |
-| **Web Frontend** | React 19, TypeScript, Vite, Recharts, Leaflet GIS, UI/UX Pro Max Glassmorphism |
+| **Web Frontend** | React 19, TypeScript, Vite, Recharts, Leaflet GIS, Glassmorphism UI |
 | **Mobile App** | React Native, Expo Router, TypeScript |
 | **Testing** | Pytest, AnyIO, Pytest-AsyncIO (23 unit tests) |
 | **DevOps** | Docker, Docker Compose |
@@ -93,61 +93,69 @@ graph TD
 ### Option A: Local Development Setup
 
 #### 1. Clone the Repository
-`ash
+```bash
 git clone https://github.com/Debddj/JalDrishti.git
 cd JalDrishti
-`
+```
 
 #### 2. Backend Setup (FastAPI)
-`ash
+```bash
 cd server
 python -m venv venv
-# Windows:
-venv\Scripts\activate
-# Linux/macOS:
-source venv/bin/activate
+```
 
+**Windows (PowerShell):**
+```powershell
+.\venv\Scripts\activate
+```
+
+**Linux / macOS:**
+```bash
+source venv/bin/activate
+```
+
+```bash
 pip install -e .
 cp ../.env.example .env
-`
+```
 
 *Configure .env with your settings (add GEMINI_API_KEY for AI advisories).*
 
 Seed the database with 6,424 stations, 415k readings, and CGWB stage benchmarks:
-`ash
+```bash
 python -m app.db.seed
-`
+```
 
 Start the backend server:
-`ash
+```bash
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-`
+```
 - **API Documentation (Swagger UI)**: http://127.0.0.1:8000/api/docs
 
 #### 3. Web Client Setup (React + Vite)
-`ash
+```bash
 cd ../client
 npm install
 npm run dev
-`
+```
 - **Dashboard URL**: http://localhost:5173
 
 #### 4. Mobile App Setup (React Native / Expo)
-`ash
+```bash
 cd ../mobile
 npm install
 npx expo start
-`
+```
 - Scan the QR code using **Expo Go** (Android/iOS) or press w for Web preview.
 
 ---
 
 ### Option B: Docker Compose Setup
 
-`ash
+```bash
 cp .env.docker .env
 docker compose up -d
-`
+```
 
 ---
 
@@ -155,14 +163,14 @@ docker compose up -d
 
 JalDrishti includes a 23-test suite covering risk classification, statistical forecasting, null-safety, and advisory fallbacks:
 
-`ash
+```bash
 cd server
 python -m pytest tests/ -v
-`
+```
 
-`
+```text
 ======================== 23 passed, 1 warning in 0.39s ========================
-`
+```
 
 ---
 
