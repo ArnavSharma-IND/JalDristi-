@@ -4,6 +4,7 @@ import { DashboardOverview } from './components/DashboardOverview';
 import { StationMap } from './components/StationMap';
 import { StationDetailModal } from './components/StationDetailModal';
 import { DistrictIntelligence } from './components/DistrictIntelligence';
+import { AIChatWidget } from './components/AIChatWidget';
 
 function App() {
   const [stations, setStations] = useState<StationSummary[]>([]);
@@ -293,6 +294,9 @@ function App() {
           onClose={() => setSelectedStationId(null)} 
         />
       )}
+
+      {/* Floating JalDrishti AI Natural Language Assistant */}
+      <AIChatWidget />
     </div>
   );
 }

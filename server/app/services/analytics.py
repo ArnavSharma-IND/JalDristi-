@@ -116,3 +116,27 @@ def compute_linear_forecast(readings: List[Dict[str, Any]], horizon_days: int = 
         "projected_water_level": round(projected_level, 2),
         "reason": "Computed from continuous station observations."
     }
+
+
+def check_predictive_risk(forecast_data: Dict[str, Any], current_risk: RiskLevel) -> Optional[Dict[str, Any]]:
+    """
+    Analyzes the 30-day forecast. If a safe/semi-critical station is projected 
+    to cross the CRITICAL threshold (10.0m bgl), it generates a predictive warning.
+    """
+    if not forecast_data or forecast_data.get("confidence") in ["LOW", "INSUFFICIENT_DATA"]:
+        return None
+        
+    projected_level = forecast_data.get("projected_water_level")
+    if projected_level is None:
+        return None
+
+    # If currently not critical, but projected to cross the 10m threshold
+    if current_risk in [RiskLevel.SAFE, RiskLevel.SEMI_CRITICAL] and projected_level >= 10.0:
+        return {
+            "type": "PREDICTIVE_WARNING",
+            "message": f"Forecast indicates threshold breach. Projected to reach {projected_level:.2f}m bgl within 30 days due to a depletion rate of {forecast_data.get('slope_m_per_day')} m/day.",
+            "urgency": "HIGH",
+            "projected_level": projected_level
+        }
+    
+    return None

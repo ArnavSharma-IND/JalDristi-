@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from app.routers import stations, provenance, export, import_data
+from app.routers import stations, provenance, export, import_data, chat
 from app.api.routes import districts, classification, alerts
 from app.core.config import settings
 
@@ -58,6 +58,7 @@ app.include_router(stations.router, prefix="/api/v1")
 app.include_router(provenance.router, prefix="/api/v1")
 app.include_router(export.router, prefix="/api/v1")
 app.include_router(import_data.router, prefix="/api/v1")
+app.include_router(chat.router, prefix="/api/v1")
 app.include_router(districts.router, prefix="/api/v1", tags=["Districts"])
 app.include_router(classification.router, prefix="/api/v1", tags=["Classification"])
 app.include_router(alerts.router, prefix="/api/v1", tags=["Alerts"])
@@ -67,6 +68,7 @@ app.include_router(stations.router)
 app.include_router(provenance.router)
 app.include_router(export.router)
 app.include_router(import_data.router)
+app.include_router(chat.router)
 
 
 @app.get("/api/v1/health", tags=["Health"])

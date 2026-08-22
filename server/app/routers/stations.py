@@ -13,7 +13,7 @@ import csv
 from app.models.database import get_sync_db as get_db
 from app.models.station import Station, TelemetryReading, RiskLevel
 from app.schemas.telemetry import StationDetailResponse
-from app.services.analytics import evaluate_telemetry_risk, compute_linear_forecast
+from app.services.analytics import evaluate_telemetry_risk, compute_linear_forecast, check_predictive_risk
 from app.services.advisory import generate_advisory
 from app.services.sensor_health import evaluate_sensor_health
 from app.services.ingestion import process_telemetry_batch
@@ -206,6 +206,7 @@ def get_station_detail(station_id: str, db: Session = Depends(get_db)):
     ]
     forecast = compute_linear_forecast(raw_data, horizon_days=30)
     health = evaluate_sensor_health(station.station_id, raw_data)
+    pred_warning = check_predictive_risk(forecast, station.telemetry_risk_indicator)
     latest_reading = raw_data[-1] if raw_data else None
 
     return {
@@ -228,7 +229,8 @@ def get_station_detail(station_id: str, db: Session = Depends(get_db)):
             for r in raw_data
         ],
         "sensor_health": health,
-        "forecast": forecast
+        "forecast": forecast,
+        "predictive_warning": pred_warning
     }
 
 
