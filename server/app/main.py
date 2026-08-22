@@ -1,64 +1,40 @@
 """
 JalDrishti — FastAPI Application Entry Point
-
-Real-time Groundwater Resource Evaluation using DWLR Data.
-Ministry of Jal Shakti | SIH 2025 - Problem Statement 068
+Telemetry-Driven Hydrogeological Intelligence for SIH25068.
 """
-
-from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
+from app.routers import stations, provenance
+from app.api.routes import districts, classification, alerts
 from app.core.config import settings
-from app.api.routes import stations, districts, health, advisory, provenance, classification, alerts
-from app.routers.stations import router as telemetry_stations_router
-from app.db.session import engine
-from app.models import base  # noqa: F401 — registers models with SQLAlchemy
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Startup and shutdown events."""
-    # Startup: create tables (dev only — use Alembic in production)
-    if settings.APP_ENV == "development":
-        async with engine.begin() as conn:
-            from app.models.base import Base
-            await conn.run_sync(Base.metadata.create_all)
-    yield
-    # Shutdown: dispose engine
-    await engine.dispose()
-
 
 app = FastAPI(
-    title="JalDrishti API",
-    description=(
-        "Real-time groundwater resource evaluation and forecasting. "
-        "Classifies DWLR monitoring stations into CGWB risk categories "
-        "and projects trend-based risk transitions."
-    ),
-    version="0.1.0",
+    title="JalDrishti Groundwater Decision Support System API",
+    description="Telemetry-Driven Hydrogeological Intelligence for SIH25068",
+    version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
-    lifespan=lifespan,
 )
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list + ["*"],
+    allow_origins=settings.cors_origins_list + ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 # ── Root & Utility Endpoints ──────────────────────────────────────────────────
 @app.get("/", tags=["Root"])
-async def root():
+def root():
     return {
-        "service": "JalDrishti API",
-        "version": "0.1.0",
+        "service": "JalDrishti Groundwater Decision Support System API",
+        "version": "1.0.0",
         "status": "online",
         "docs": "/api/docs",
         "redoc": "/api/redoc",
@@ -68,24 +44,27 @@ async def root():
 
 
 @app.get("/docs", include_in_schema=False)
-async def redirect_docs():
-    from fastapi.responses import RedirectResponse
+def redirect_docs():
     return RedirectResponse(url="/api/docs")
 
 
 @app.get("/redoc", include_in_schema=False)
-async def redirect_redoc():
-    from fastapi.responses import RedirectResponse
+def redirect_redoc():
     return RedirectResponse(url="/api/redoc")
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
-app.include_router(health.router, prefix="/api/v1", tags=["Health"])
-app.include_router(provenance.router, prefix="/api/v1", tags=["Data Provenance"])
-app.include_router(stations.router, prefix="/api/v1", tags=["Stations (Detailed)"])
-app.include_router(telemetry_stations_router, prefix="/api/v1", tags=["Stations (Telemetry)"])
-app.include_router(telemetry_stations_router, tags=["Stations Direct"])
-app.include_router(classification.router, prefix="/api/v1", tags=["Classification"])
+# ── Mount Routers under /api/v1 ───────────────────────────────────────────────
+app.include_router(stations.router, prefix="/api/v1")
+app.include_router(provenance.router, prefix="/api/v1")
 app.include_router(districts.router, prefix="/api/v1", tags=["Districts"])
-app.include_router(advisory.router, prefix="/api/v1", tags=["Advisory"])
+app.include_router(classification.router, prefix="/api/v1", tags=["Classification"])
 app.include_router(alerts.router, prefix="/api/v1", tags=["Alerts"])
+
+# Also mount direct for flexible access
+app.include_router(stations.router)
+app.include_router(provenance.router)
+
+
+@app.get("/api/v1/health", tags=["Health"])
+def health_check():
+    return {"status": "HEALTHY", "service": "JalDrishti Backend Core"}
