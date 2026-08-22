@@ -3,6 +3,7 @@ import { apiService, StationSummary } from './services/api';
 import { DashboardOverview } from './components/DashboardOverview';
 import { StationMap } from './components/StationMap';
 import { StationDetailModal } from './components/StationDetailModal';
+import { DistrictIntelligence } from './components/DistrictIntelligence';
 
 function App() {
   const [stations, setStations] = useState<StationSummary[]>([]);
@@ -10,16 +11,20 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRisk, setSelectedRisk] = useState<string | null>(null);
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [selectedRisk]);
+  }, [selectedRisk, selectedDistrict]);
 
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await apiService.getStations(selectedRisk ? { risk: selectedRisk } : undefined);
+      const params: { district?: string; risk?: string } = {};
+      if (selectedRisk) params.risk = selectedRisk;
+      if (selectedDistrict) params.district = selectedDistrict;
+      const data = await apiService.getStations(Object.keys(params).length ? params : undefined);
       setStations(data);
     } catch (err: any) {
       setError(err.message || 'Failed to connect to JalDrishti Backend API.');
@@ -93,6 +98,12 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* Regional District Intelligence Section */}
+        <DistrictIntelligence 
+          stations={stations} 
+          onSelectDistrict={(district) => setSelectedDistrict(selectedDistrict === district ? null : district)} 
+        />
       </main>
 
       {selectedStationId && (

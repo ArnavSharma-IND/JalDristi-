@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiService, AdvisoryResponse } from '../services/api';
+import { TelemetryChart } from './TelemetryChart';
 
 interface StationDetailModalProps {
   stationId: string;
@@ -116,6 +117,27 @@ export const StationDetailModal: React.FC<StationDetailModalProps> = ({ stationI
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Telemetry Time-Series Chart */}
+            <div className="p-4 rounded-lg border border-slate-800 bg-slate-950">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Telemetry Time-Series & 30-Day Regression Forecast
+                </h3>
+                {data?.sensor_health && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                    data.sensor_health.status === 'HEALTHY'
+                      ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300'
+                      : data.sensor_health.status === 'STALE'
+                      ? 'bg-amber-950/60 border-amber-700 text-amber-300'
+                      : 'bg-rose-950/60 border-rose-700 text-rose-300'
+                  }`}>
+                    Sensor: {data.sensor_health.status}
+                  </span>
+                )}
+              </div>
+              <TelemetryChart history={data?.history || []} forecast={data?.forecast || null} />
             </div>
 
             {/* AI / Fallback Advisory Section */}

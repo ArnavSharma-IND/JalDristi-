@@ -12,6 +12,7 @@ from app.models.station import Station, TelemetryReading, RiskLevel
 from app.schemas.telemetry import StationDetailResponse
 from app.services.analytics import evaluate_telemetry_risk, compute_linear_forecast
 from app.services.advisory import generate_advisory
+from app.services.sensor_health import evaluate_sensor_health
 
 router = APIRouter(prefix="/stations", tags=["Stations"])
 
@@ -66,8 +67,15 @@ def get_station_detail(station_id: str, db: Session = Depends(get_db)):
         .order_by(TelemetryReading.timestamp.asc())\
         .all()
 
-    raw_data = [{"timestamp": r.timestamp, "water_level_m_bgl": r.water_level_m_bgl} for r in readings]
+    raw_data = [
+        {
+            "timestamp": r.timestamp,
+            "water_level_m_bgl": r.water_level_m_bgl if r.water_level_m_bgl is not None else r.depth_below_ground_m
+        }
+        for r in readings
+    ]
     forecast = compute_linear_forecast(raw_data, horizon_days=30)
+    health = evaluate_sensor_health(station.station_id, raw_data)
     latest_reading = raw_data[-1] if raw_data else None
 
     return {
@@ -82,6 +90,14 @@ def get_station_detail(station_id: str, db: Session = Depends(get_db)):
         "latest_water_level_m_bgl": latest_reading["water_level_m_bgl"] if latest_reading else None,
         "last_updated": latest_reading["timestamp"] if latest_reading else None,
         "observation_count": len(raw_data),
+        "history": [
+            {
+                "timestamp": (r["timestamp"].isoformat() if hasattr(r["timestamp"], "isoformat") else str(r["timestamp"])),
+                "water_level_m_bgl": r["water_level_m_bgl"]
+            }
+            for r in raw_data
+        ],
+        "sensor_health": health,
         "forecast": forecast
     }
 
